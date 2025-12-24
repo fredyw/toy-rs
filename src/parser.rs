@@ -27,7 +27,29 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_primary(&mut self) -> Expr {
+    pub fn parse_expression(&mut self, min_precedence: u8) -> Expr {
+        let mut lhs = self.parse_primary();
+        while self.get_precedence() > min_precedence {
+            let op = self.get_binary_op().unwrap();
+            self.advance(); // Eat the operator.
+            let rhs = self.parse_expression(self.get_precedence());
+            lhs = Expr::Binary(Box::new(lhs), op, Box::new(rhs));
+        }
+        lhs
+    }
+
+    pub fn parse_statement(&mut self) -> Stmt {
+        match self.current_token {
+            // For example: let x = 123;
+            Token::Let => self.parse_let_statement(),
+            // For example: fn foo() {}
+            Token::Fn => self.parse_function_statement(),
+            // For example: a + 1;
+            _ => self.parse_expression_statement(),
+        }
+    }
+
+    fn parse_primary(&mut self) -> Expr {
         let token = self.current_token.clone();
         match token {
             Token::Int(val) => {
@@ -56,5 +78,51 @@ impl<'a> Parser<'a> {
             }
             _ => panic!("Unexpected token in expression: {:?}", token),
         }
+    }
+
+    fn get_precedence(&self) -> u8 {
+        match self.current_token {
+            Token::Star | Token::Slash => 20,         // * and / happen first
+            Token::Plus | Token::Minus => 10,         // + and - happen after
+            Token::EqEq | Token::Lt | Token::Gt => 5, // Comparisons happen last
+            _ => 0,                                   // Not an operator
+        }
+    }
+
+    fn get_binary_op(&self) -> Option<BinaryOp> {
+        match self.current_token {
+            Token::Plus => Some(BinaryOp::Add),
+            Token::Minus => Some(BinaryOp::Sub),
+            Token::Star => Some(BinaryOp::Mul),
+            Token::Slash => Some(BinaryOp::Div),
+            Token::EqEq => Some(BinaryOp::Eq),
+            Token::Lt => Some(BinaryOp::Lt),
+            Token::Gt => Some(BinaryOp::Gt),
+            _ => None,
+        }
+    }
+
+    fn parse_let_statement(&mut self) -> Stmt {
+        self.advance(); // Eat the `let`.
+        let name = match &self.current_token {
+            Token::Identifier(n) => n.clone(),
+            _ => panic!("Expected variable name after 'let'"),
+        };
+        self.advance(); // Eat the `name`.
+        self.expect(Token::Eq);
+        // Parse the value (RHS).
+        let value = self.parse_expression(0);
+        self.expect(Token::SemiColon);
+        Stmt::Let(name, value)
+    }
+
+    fn parse_expression_statement(&mut self) -> Stmt {
+        let expr = self.parse_expression(0);
+        self.expect(Token::SemiColon);
+        Stmt::Expression(expr)
+    }
+
+    fn parse_function_statement(&mut self) -> Stmt {
+        todo!("Function parsing not implemented yet");
     }
 }
