@@ -4,6 +4,7 @@ use std::str::Chars;
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     Int(i64),
+    Float(f64),
     Str(String),
     Identifier(String),
     Let,
@@ -76,7 +77,7 @@ impl<'a> Lexer<'a> {
                 }
             }
             Some(ch) if ch.is_ascii_digit() => self.read_number(ch),
-            Some(ch) if ch.is_alphabetic() => Token::Identifier("TODO".to_string()),
+            Some(ch) if ch.is_alphabetic() || ch == '_' => self.read_identifier(ch),
             None => Token::Eof,
             Some(ch) => panic!("Unexpected character: {}", ch),
         }
@@ -84,15 +85,47 @@ impl<'a> Lexer<'a> {
 
     fn read_number(&mut self, first_digit: char) -> Token {
         let mut number_str = String::from(first_digit);
+        let mut has_dot = false;
         while let Some(&ch) = self.input.peek() {
             if ch.is_ascii_digit() {
                 self.input.next();
                 number_str.push(ch);
+            } else if ch == '.' && !has_dot {
+                self.input.next();
+                number_str.push(ch);
+                has_dot = true;
             } else {
                 break;
             }
         }
-        let value = number_str.parse::<i64>().unwrap();
-        Token::Int(value)
+
+        if has_dot {
+            let value = number_str.parse::<f64>().unwrap();
+            Token::Float(value)
+        } else {
+            let value = number_str.parse::<i64>().unwrap();
+            Token::Int(value)
+        }
+    }
+
+    fn read_identifier(&mut self, first_char: char) -> Token {
+        let mut ident = String::from(first_char);
+        while let Some(&ch) = self.input.peek() {
+            if ch.is_alphanumeric() || ch == '_' {
+                self.input.next();
+                ident.push(ch);
+            } else {
+                break;
+            }
+        }
+        match ident.as_str() {
+            "let" => Token::Let,
+            "fn" => Token::Fn,
+            "if" => Token::If,
+            "else" => Token::Else,
+            "true" => Token::True,
+            "false" => Token::False,
+            _ => Token::Identifier(ident),
+        }
     }
 }
