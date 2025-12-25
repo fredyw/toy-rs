@@ -55,8 +55,22 @@ impl<'a> Parser<'a> {
         statements
     }
 
+    fn parse_unary(&mut self) -> Expr {
+        if self.current_token == Token::Bang || self.current_token == Token::Minus {
+            let op = match self.current_token {
+                Token::Bang => crate::ast::UnaryOp::Not,
+                Token::Minus => crate::ast::UnaryOp::Neg,
+                _ => unreachable!(),
+            };
+            self.advance(); // Eat the `!` or `-`.
+            let right = self.parse_unary();
+            return Expr::Unary(op, Box::new(right));
+        }
+        self.parse_primary()
+    }
+
     pub fn parse_expression(&mut self, min_precedence: u8) -> Expr {
-        let mut lhs = self.parse_primary();
+        let mut lhs = self.parse_unary();
         while self.get_precedence() > min_precedence {
             let op_precedence = self.get_precedence();
             let op = self.get_binary_op().unwrap();

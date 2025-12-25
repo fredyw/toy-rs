@@ -127,7 +127,15 @@ pub fn eval_expression(expr: ast::Expr, env: &mut Environment) -> Value {
                 _ => panic!("Can only call functions, not {:?}", func_val),
             }
         }
-        _ => todo!("Implement other expressions"),
+        ast::Expr::Unary(op, rhs) => {
+            let val = eval_expression(*rhs, env);
+            match (op, val) {
+                (ast::UnaryOp::Neg, Value::Int(i)) => Value::Int(-i),
+                (ast::UnaryOp::Neg, Value::Float(f)) => Value::Float(-f),
+                (ast::UnaryOp::Not, Value::Bool(b)) => Value::Bool(!b),
+                (op, val) => panic!("Cannot apply unary op {:?} to {:?}", op, val),
+            }
+        }
     }
 }
 

@@ -1,0 +1,4 @@
+let pos = 10;
+let neg = -pos;
+let b = !true;
+neg
