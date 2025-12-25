@@ -6,9 +6,9 @@ use lexer::Lexer;
 use parser::Parser;
 
 fn main() {
-    let code = "1 + 2 * 3";
+    let code = "let x = 123 + 456;";
     let lexer = Lexer::new(code);
     let mut parser = Parser::new(lexer);
-    let ast = parser.parse_expression(0);
+    let ast = parser.parse_statement();
     println!("AST: {:#?}", ast);
 }

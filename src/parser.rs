@@ -49,6 +49,41 @@ impl<'a> Parser<'a> {
         }
     }
 
+    // Parses a block: { statement; statement; expr }
+    fn parse_block(&mut self) -> Expr {
+        self.expect(Token::LBrace);
+        let mut statements = Vec::new();
+        while self.current_token != Token::RBrace && self.current_token != Token::Eof {
+            match self.current_token {
+                Token::Let => {
+                    statements.push(self.parse_let_statement());
+                }
+                Token::Fn => {
+                    statements.push(self.parse_function_statement());
+                }
+                // It's an expression or expression statement.
+                _ => {
+                    let expr = self.parse_expression(0);
+                    if self.current_token == Token::SemiColon {
+                        // For example: "1 + 1;" -> Statement (returns nothing).
+                        self.advance(); // Eat the ';'
+                        statements.push(Stmt::Expression(expr));
+                    } else {
+                        // For example: "1 + 1" -> Tail Expression (returns the value).
+                        statements.push(Stmt::Expression(expr));
+                        // If there is no semicolon, this must be the last thing in the block.
+                        if self.current_token != Token::RBrace {
+                            panic!("Expected ';' or '}}' after expression");
+                        }
+                    }
+                }
+            }
+        }
+        // 3. Eat the closing brace.
+        self.expect(Token::RBrace);
+        Expr::Block(statements)
+    }
+
     fn parse_primary(&mut self) -> Expr {
         let token = self.current_token.clone();
         match token {
@@ -76,7 +111,19 @@ impl<'a> Parser<'a> {
                 self.advance();
                 Expr::Variable(name)
             }
-            _ => panic!("Unexpected token in expression: {:?}", token),
+            Token::LParen => {
+                self.advance();
+                let expr = self.parse_expression(0);
+                self.expect(Token::RParen);
+                expr
+            }
+
+            // --- THIS IS THE CRITICAL ADDITION ---
+            // Because we handle LBrace here, a Block becomes a "Primary Expression"
+            // This means you can do math with it:  1 + { 5 }
+            Token::LBrace => self.parse_block(),
+            // -------------------------------------
+            _ => panic!("Unexpected token: {:?}", token),
         }
     }
 
