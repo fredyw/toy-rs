@@ -1,6 +1,7 @@
 use crate::ast;
 use crate::ast::BinaryOp;
 use std::collections::HashMap;
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -10,6 +11,21 @@ pub enum Value {
     Str(String),
     Unit,
     Function(Vec<String>, ast::Expr),
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Value::Int(i) => write!(f, "{}", i),
+            Value::Float(fl) => write!(f, "{}", fl),
+            Value::Bool(b) => write!(f, "{}", b),
+            Value::Str(s) => write!(f, "{}", s),
+            Value::Unit => write!(f, "()"),
+            Value::Function(params, _) => {
+                write!(f, "<fn ({})>", params.join(", "))
+            }
+        }
+    }
 }
 
 #[derive(Clone)]

@@ -24,6 +24,6 @@ fn main() {
         last_value = eval_statement(stmt, &mut env);
     }
     if last_value != Value::Unit {
-        println!("{:?}", last_value);
+        println!("{}", last_value);
     }
 }
