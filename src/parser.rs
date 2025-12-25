@@ -49,7 +49,6 @@ impl<'a> Parser<'a> {
         }
     }
 
-    // Parses a block: { statement; statement; expr }
     fn parse_block(&mut self) -> Expr {
         self.expect(Token::LBrace);
         let mut statements = Vec::new();
@@ -79,7 +78,6 @@ impl<'a> Parser<'a> {
                 }
             }
         }
-        // 3. Eat the closing brace.
         self.expect(Token::RBrace);
         Expr::Block(statements)
     }
@@ -166,7 +164,39 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_function_statement(&mut self) -> Stmt {
-        todo!("Function parsing not implemented yet");
+        self.advance(); // Eat `fn`.
+        let name = match &self.current_token {
+            Token::Identifier(n) => n.clone(),
+            _ => panic!("Expected function name"),
+        };
+        self.advance();
+        // Parse parameters (param1, param2, ...).
+        self.expect(Token::LParen);
+        let mut params = Vec::new();
+        if self.current_token != Token::RParen {
+            loop {
+                match &self.current_token {
+                    Token::Identifier(param_name) => {
+                        params.push(param_name.clone());
+                        self.advance();
+                    }
+                    _ => panic!("Expected parameter name"),
+                }
+                if self.current_token == Token::Comma {
+                    self.advance();
+                } else {
+                    break;
+                }
+            }
+        }
+        self.expect(Token::RParen);
+        // Parse function body.
+        let body_expr = self.parse_block();
+        let body_statements = match body_expr {
+            Expr::Block(stmts) => stmts,
+            _ => panic!("Function body must be a block"),
+        };
+        Stmt::Fn(name, params, body_statements)
     }
 
     fn parse_if_expression(&mut self) -> Expr {
