@@ -1,0 +1,13 @@
+fn check_size(n) {
+    if n < 10 {
+        "small"
+    } else {
+        if n < 20 {
+            "medium"
+        } else {
+            "large"
+        }
+    }
+}
+
+check_size(5) + " " + check_size(15) + " " + check_size(25)

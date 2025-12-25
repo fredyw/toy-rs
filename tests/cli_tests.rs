@@ -35,3 +35,15 @@ fn test_cli_strings() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert_eq!(stdout.trim(), "Hello, Toy User!");
 }
+
+#[test]
+fn test_cli_control_flow() {
+    let output = Command::new("cargo")
+        .args(&["run", "--quiet", "--", "tests/control_flow.toy"])
+        .output()
+        .expect("Failed to run cargo");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert_eq!(stdout.trim(), "small medium large");
+}
