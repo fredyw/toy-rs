@@ -9,6 +9,7 @@ pub enum Value {
     Bool(bool),
     Str(String),
     Unit,
+    Function(Vec<String>, ast::Expr),
 }
 
 #[derive(Clone)]
@@ -73,6 +74,55 @@ pub fn eval_expression(expr: ast::Expr, env: &mut Environment) -> Value {
                 (l, op, r) => panic!("Type mismatch: {:?} {:?} {:?}", l, op, r),
             }
         }
+        ast::Expr::Block(statements, tail) => eval_block(statements, tail, env),
+        ast::Expr::If(condition, then_branch, else_branch) => {
+            let cond_val = eval_expression(*condition, env);
+            if let Value::Bool(true) = cond_val {
+                eval_expression(*then_branch, env)
+            } else {
+                if let Some(else_expr) = else_branch {
+                    eval_expression(*else_expr, env)
+                } else {
+                    Value::Unit
+                }
+            }
+        }
+        ast::Expr::Call(_, _) => todo!("Implement function calls next!"),
         _ => todo!("Implement other expressions"),
+    }
+}
+
+pub fn eval_statement(stmt: ast::Stmt, env: &mut Environment) -> Value {
+    match stmt {
+        ast::Stmt::Let(name, expr) => {
+            let value = eval_expression(expr, env);
+            env.define(name, value);
+            Value::Unit
+        }
+        ast::Stmt::Fn(name, params, body) => {
+            let func_value = Value::Function(params, body);
+            env.define(name, func_value);
+            Value::Unit
+        }
+        ast::Stmt::Expression(expr) => {
+            eval_expression(expr, env);
+            Value::Unit
+        }
+    }
+}
+
+fn eval_block(
+    statements: Vec<ast::Stmt>,
+    tail_expr: Option<Box<ast::Expr>>,
+    env: &mut Environment,
+) -> Value {
+    let mut block_env = env.clone();
+    for stmt in statements {
+        eval_statement(stmt, &mut block_env);
+    }
+    if let Some(expr) = tail_expr {
+        eval_expression(*expr, &mut block_env)
+    } else {
+        Value::Unit
     }
 }

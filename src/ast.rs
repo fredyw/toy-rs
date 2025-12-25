@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
     Int(i64),
     Float(f64),
@@ -6,7 +6,7 @@ pub enum Literal {
     Str(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BinaryOp {
     Add,
     Sub,
@@ -17,13 +17,13 @@ pub enum BinaryOp {
     Eq,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum UnaryOp {
     Neg,
     Not,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Literal(Literal),
     Binary(Box<Expr>, BinaryOp, Box<Expr>),
@@ -34,7 +34,7 @@ pub enum Expr {
     If(Box<Expr>, Box<Expr>, Option<Box<Expr>>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Stmt {
     Let(String, Expr),
     Fn(String, Vec<String>, Expr),
