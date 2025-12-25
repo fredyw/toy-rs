@@ -117,12 +117,8 @@ impl<'a> Parser<'a> {
                 self.expect(Token::RParen);
                 expr
             }
-
-            // --- THIS IS THE CRITICAL ADDITION ---
-            // Because we handle LBrace here, a Block becomes a "Primary Expression"
-            // This means you can do math with it:  1 + { 5 }
             Token::LBrace => self.parse_block(),
-            // -------------------------------------
+            Token::If => self.parse_if_expression(),
             _ => panic!("Unexpected token: {:?}", token),
         }
     }
@@ -171,5 +167,22 @@ impl<'a> Parser<'a> {
 
     fn parse_function_statement(&mut self) -> Stmt {
         todo!("Function parsing not implemented yet");
+    }
+
+    fn parse_if_expression(&mut self) -> Expr {
+        self.advance(); // Eat `if`.
+        let condition = self.parse_expression(0);
+        let then_branch = self.parse_block();
+        let else_branch = if self.current_token == Token::Else {
+            self.advance(); // Eat `else`.
+            if self.current_token == Token::If {
+                Some(Box::new(self.parse_if_expression()))
+            } else {
+                Some(Box::new(self.parse_block()))
+            }
+        } else {
+            None
+        };
+        Expr::If(Box::new(condition), Box::new(then_branch), else_branch)
     }
 }
