@@ -30,9 +30,10 @@ impl<'a> Parser<'a> {
     pub fn parse_expression(&mut self, min_precedence: u8) -> Expr {
         let mut lhs = self.parse_primary();
         while self.get_precedence() > min_precedence {
+            let op_precedence = self.get_precedence();
             let op = self.get_binary_op().unwrap();
-            self.advance(); // Eat the operator.
-            let rhs = self.parse_expression(self.get_precedence());
+            self.advance(); // Eat the operator
+            let rhs = self.parse_expression(op_precedence);
             lhs = Expr::Binary(Box::new(lhs), op, Box::new(rhs));
         }
         lhs
