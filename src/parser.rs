@@ -1,4 +1,4 @@
-use crate::ast::{BinaryOp, Expr, Literal, Stmt, UnaryOp};
+use crate::ast::{BinaryOp, Expr, Literal, Stmt};
 use crate::lexer::{Lexer, Token};
 
 pub struct Parser<'a> {
@@ -30,8 +30,28 @@ impl<'a> Parser<'a> {
     pub fn parse_program(&mut self) -> Vec<Stmt> {
         let mut statements = Vec::new();
         while self.current_token != Token::Eof {
-            statements.push(self.parse_statement());
+            match self.current_token {
+                Token::Let | Token::Fn => {
+                    statements.push(self.parse_statement());
+                }
+                // Expressions, e.g., "1 + 1"
+                _ => {
+                    let expr = self.parse_expression(0);
+                    if self.current_token == Token::SemiColon {
+                        self.advance(); // Eat `;`.
+                        statements.push(Stmt::Expression(expr));
+                    } else {
+                        // If there is NO semicolon, it is only allowed if we are at EOF.
+                        if self.current_token == Token::Eof {
+                            statements.push(Stmt::Expression(expr));
+                        } else {
+                            panic!("Expected ';' after expression");
+                        }
+                    }
+                }
+            }
         }
+
         statements
     }
 

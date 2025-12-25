@@ -13,13 +13,15 @@ fn main() {
 
         let x = 10;
         let result = add(x, 20);
+        result
     ";
     let lexer = lexer::Lexer::new(code);
     let mut parser = parser::Parser::new(lexer);
     let program = parser.parse_program();
     let mut env = Environment::new();
+    let mut last_value = interpreter::Value::Unit;
     for stmt in program {
-        interpreter::eval_statement(stmt, &mut env);
+        last_value = interpreter::eval_statement(stmt, &mut env);
     }
-    println!("Final variable 'result': {:?}", env.get("result"));
+    println!("Program result: {:?}", last_value);
 }
