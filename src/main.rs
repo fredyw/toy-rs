@@ -4,7 +4,6 @@ mod lexer;
 mod parser;
 
 fn main() {
-    // A program that defines a function and calls it
     let code = "
         fn add(a, b) {
             a + b
@@ -13,7 +12,6 @@ fn main() {
         let x = 10;
         add(x, 20)
     ";
-    // Wrap in braces to treat as a block
     let wrapped_code = format!("{{ {} }}", code);
     let lexer = lexer::Lexer::new(&wrapped_code);
     let mut parser = parser::Parser::new(lexer);
