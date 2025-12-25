@@ -30,13 +30,13 @@ pub enum Expr {
     Unary(UnaryOp, Box<Expr>),
     Variable(String),
     Call(String, Vec<Expr>),
-    Block(Vec<Stmt>),
+    Block(Vec<Stmt>, Option<Box<Expr>>),
     If(Box<Expr>, Box<Expr>, Option<Box<Expr>>),
 }
 
 #[derive(Debug, Clone)]
 pub enum Stmt {
     Let(String, Expr),
-    Fn(String, Vec<String>, Vec<Stmt>),
+    Fn(String, Vec<String>, Expr),
     Expression(Expr),
 }

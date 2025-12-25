@@ -52,6 +52,7 @@ impl<'a> Parser<'a> {
     fn parse_block(&mut self) -> Expr {
         self.expect(Token::LBrace);
         let mut statements = Vec::new();
+        let mut tail_expr = None;
         while self.current_token != Token::RBrace && self.current_token != Token::Eof {
             match self.current_token {
                 Token::Let => {
@@ -60,18 +61,17 @@ impl<'a> Parser<'a> {
                 Token::Fn => {
                     statements.push(self.parse_function_statement());
                 }
-                // It's an expression or expression statement.
                 _ => {
                     let expr = self.parse_expression(0);
                     if self.current_token == Token::SemiColon {
-                        // For example: "1 + 1;" -> Statement (returns nothing).
-                        self.advance(); // Eat the ';'
+                        // A statement. For example: "1 + 1;"
+                        self.advance();
                         statements.push(Stmt::Expression(expr));
                     } else {
-                        // For example: "1 + 1" -> Tail Expression (returns the value).
-                        statements.push(Stmt::Expression(expr));
-                        // If there is no semicolon, this must be the last thing in the block.
-                        if self.current_token != Token::RBrace {
+                        // An expression. For example: "1 + 1"
+                        if self.current_token == Token::RBrace {
+                            tail_expr = Some(Box::new(expr));
+                        } else {
                             panic!("Expected ';' or '}}' after expression");
                         }
                     }
@@ -79,7 +79,7 @@ impl<'a> Parser<'a> {
             }
         }
         self.expect(Token::RBrace);
-        Expr::Block(statements)
+        Expr::Block(statements, tail_expr)
     }
 
     fn parse_primary(&mut self) -> Expr {
@@ -191,12 +191,8 @@ impl<'a> Parser<'a> {
         }
         self.expect(Token::RParen);
         // Parse function body.
-        let body_expr = self.parse_block();
-        let body_statements = match body_expr {
-            Expr::Block(stmts) => stmts,
-            _ => panic!("Function body must be a block"),
-        };
-        Stmt::Fn(name, params, body_statements)
+        let body = self.parse_block();
+        Stmt::Fn(name, params, body)
     }
 
     fn parse_if_expression(&mut self) -> Expr {
