@@ -95,12 +95,10 @@ pub fn eval_expression(expr: ast::Expr, env: &mut Environment) -> Value {
             let cond_val = eval_expression(*condition, env);
             if let Value::Bool(true) = cond_val {
                 eval_expression(*then_branch, env)
+            } else if let Some(else_expr) = else_branch {
+                eval_expression(*else_expr, env)
             } else {
-                if let Some(else_expr) = else_branch {
-                    eval_expression(*else_expr, env)
-                } else {
-                    Value::Unit
-                }
+                Value::Unit
             }
         }
         ast::Expr::Call(name, args) => {
