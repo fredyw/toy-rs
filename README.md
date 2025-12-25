@@ -1,2 +1,2 @@
 # toy-rs
-A toy programming language written in Rust.
+A toy programming language with Rust-like syntax written in Rust.
