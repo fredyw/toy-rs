@@ -1,3 +1,5 @@
+use crate::interpreter::Environment;
+
 mod ast;
 mod interpreter;
 mod lexer;
@@ -10,13 +12,14 @@ fn main() {
         }
 
         let x = 10;
-        add(x, 20)
+        let result = add(x, 20);
     ";
-    let wrapped_code = format!("{{ {} }}", code);
-    let lexer = lexer::Lexer::new(&wrapped_code);
+    let lexer = lexer::Lexer::new(code);
     let mut parser = parser::Parser::new(lexer);
-    let ast = parser.parse_expression(0);
-    let mut env = interpreter::Environment::new();
-    let result = interpreter::eval_expression(ast, &mut env);
-    println!("Final Result: {:?}", result);
+    let program = parser.parse_program();
+    let mut env = Environment::new();
+    for stmt in program {
+        interpreter::eval_statement(stmt, &mut env);
+    }
+    println!("Final variable 'result': {:?}", env.get("result"));
 }

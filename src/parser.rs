@@ -27,6 +27,14 @@ impl<'a> Parser<'a> {
         }
     }
 
+    pub fn parse_program(&mut self) -> Vec<Stmt> {
+        let mut statements = Vec::new();
+        while self.current_token != Token::Eof {
+            statements.push(self.parse_statement());
+        }
+        statements
+    }
+
     pub fn parse_expression(&mut self, min_precedence: u8) -> Expr {
         let mut lhs = self.parse_primary();
         while self.get_precedence() > min_precedence {
