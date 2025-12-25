@@ -107,8 +107,25 @@ impl<'a> Parser<'a> {
                 Expr::Literal(Literal::Bool(false))
             }
             Token::Identifier(name) => {
-                self.advance();
-                Expr::Variable(name)
+                self.advance(); // Eat the name
+                if self.current_token == Token::LParen {
+                    self.advance(); // Eat `(`.
+                    let mut args = Vec::new();
+                    if self.current_token != Token::RParen {
+                        loop {
+                            args.push(self.parse_expression(0));
+                            if self.current_token == Token::Comma {
+                                self.advance();
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    self.expect(Token::RParen); // Eat `)`.
+                    Expr::Call(name, args)
+                } else {
+                    Expr::Variable(name)
+                }
             }
             Token::LParen => {
                 self.advance();

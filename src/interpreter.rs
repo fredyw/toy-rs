@@ -87,7 +87,30 @@ pub fn eval_expression(expr: ast::Expr, env: &mut Environment) -> Value {
                 }
             }
         }
-        ast::Expr::Call(_, _) => todo!("Implement function calls next!"),
+        ast::Expr::Call(name, args) => {
+            let func_val = match env.get(&name) {
+                Some(val) => val,
+                None => panic!("Undefined function: {}", name),
+            };
+            match func_val {
+                Value::Function(params, body) => {
+                    if args.len() != params.len() {
+                        panic!(
+                            "Mismatched arguments: expected {}, got {}",
+                            params.len(),
+                            args.len()
+                        );
+                    }
+                    let mut func_env = Environment::new();
+                    for (param, arg_expr) in params.iter().zip(args) {
+                        let arg_val = eval_expression(arg_expr, env);
+                        func_env.define(param.clone(), arg_val);
+                    }
+                    eval_expression(body, &mut func_env)
+                }
+                _ => panic!("Can only call functions, not {:?}", func_val),
+            }
+        }
         _ => todo!("Implement other expressions"),
     }
 }

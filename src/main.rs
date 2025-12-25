@@ -4,21 +4,21 @@ mod lexer;
 mod parser;
 
 fn main() {
+    // A program that defines a function and calls it
     let code = "
+        fn add(a, b) {
+            a + b
+        }
+
         let x = 10;
-        let y = {
-            let x = 5;
-            x + 2
-        };
-        x + y
+        add(x, 20)
     ";
-    let lexer = lexer::Lexer::new(code);
-    let mut parser = parser::Parser::new(lexer);
+    // Wrap in braces to treat as a block
     let wrapped_code = format!("{{ {} }}", code);
     let lexer = lexer::Lexer::new(&wrapped_code);
     let mut parser = parser::Parser::new(lexer);
-    let ast = parser.parse_expression(0); // Parse the big block
+    let ast = parser.parse_expression(0);
     let mut env = interpreter::Environment::new();
     let result = interpreter::eval_expression(ast, &mut env);
-    println!("Runtime Result: {:?}", result);
+    println!("Final Result: {:?}", result);
 }
