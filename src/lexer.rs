@@ -76,6 +76,7 @@ impl<'a> Lexer<'a> {
                     Token::Eq
                 }
             }
+            Some('"') => self.read_string(),
             Some(ch) if ch.is_ascii_digit() => self.read_number(ch),
             Some(ch) if ch.is_alphabetic() || ch == '_' => self.read_identifier(ch),
             None => Token::Eof,
@@ -106,6 +107,26 @@ impl<'a> Lexer<'a> {
             let value = number_str.parse::<i64>().unwrap();
             Token::Int(value)
         }
+    }
+
+    fn read_string(&mut self) -> Token {
+        let mut string_content = String::new();
+        loop {
+            match self.input.peek() {
+                Some(&'"') => {
+                    self.input.next(); // Eat the `"`.
+                    break;
+                }
+                Some(_) => {
+                    let ch = self.input.next().unwrap();
+                    string_content.push(ch);
+                }
+                None => {
+                    panic!("Unterminated string literal");
+                }
+            }
+        }
+        Token::Str(string_content)
     }
 
     fn read_identifier(&mut self, first_char: char) -> Token {
