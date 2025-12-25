@@ -272,3 +272,110 @@ impl<'a> Parser<'a> {
         Expr::If(Box::new(condition), Box::new(then_branch), else_branch)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ast::{BinaryOp, Expr, Literal, Stmt, UnaryOp};
+    use crate::lexer::Lexer;
+
+    fn parse_helper(input: &str) -> Vec<Stmt> {
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        parser.parse_program()
+    }
+
+    #[test]
+    fn test_let_statement() {
+        let input = "let x = 5;";
+        let statements = parse_helper(input);
+        assert_eq!(statements.len(), 1);
+        match &statements[0] {
+            Stmt::Let(name, expr) => {
+                assert_eq!(name, "x");
+                match expr {
+                    Expr::Literal(Literal::Int(val)) => assert_eq!(*val, 5),
+                    _ => panic!("Expected integer literal"),
+                }
+            }
+            _ => panic!("Expected Let statement"),
+        }
+    }
+
+    #[test]
+    fn test_expression_precedence() {
+        let input = "1 + 2 * 3;";
+        let statements = parse_helper(input);
+        assert_eq!(statements.len(), 1);
+        match &statements[0] {
+            Stmt::Expression(expr) => {
+                // Should be (1 + (2 * 3))
+                match expr {
+                    Expr::Binary(lhs, op, rhs) => {
+                        assert_eq!(*op, BinaryOp::Add);
+                        match &**lhs {
+                            Expr::Literal(Literal::Int(v)) => assert_eq!(*v, 1),
+                            _ => panic!("Left side should be 1"),
+                        }
+                        match &**rhs {
+                            Expr::Binary(r_lhs, r_op, r_rhs) => {
+                                assert_eq!(*r_op, BinaryOp::Mul);
+                                match &**r_lhs {
+                                    Expr::Literal(Literal::Int(v)) => assert_eq!(*v, 2),
+                                    _ => panic!("Inner left should be 2"),
+                                }
+                                match &**r_rhs {
+                                    Expr::Literal(Literal::Int(v)) => assert_eq!(*v, 3),
+                                    _ => panic!("Inner right should be 3"),
+                                }
+                            }
+                            _ => panic!("Right side should be multiplication"),
+                        }
+                    }
+                    _ => panic!("Expected Binary expression"),
+                }
+            }
+            _ => panic!("Expected Expression statement"),
+        }
+    }
+
+    #[test]
+    fn test_implicit_return() {
+        let input = "let x = 10; x + 5";
+        let statements = parse_helper(input);
+        assert_eq!(statements.len(), 2);
+        match &statements[1] {
+            Stmt::ImplicitReturn(expr) => match expr {
+                Expr::Binary(lhs, op, rhs) => {
+                    assert_eq!(*op, BinaryOp::Add);
+                    match &**lhs {
+                        Expr::Variable(name) => assert_eq!(name, "x"),
+                        _ => panic!("Expected variable"),
+                    }
+                    match &**rhs {
+                        Expr::Literal(Literal::Int(v)) => assert_eq!(*v, 5),
+                        _ => panic!("Expected 5"),
+                    }
+                }
+                _ => panic!("Expected Binary expression"),
+            },
+            _ => panic!("Expected ImplicitReturn statement"),
+        }
+    }
+
+    #[test]
+    fn test_unary_expression() {
+        let input = "-5;";
+        let statements = parse_helper(input);
+        match &statements[0] {
+            Stmt::Expression(Expr::Unary(op, expr)) => {
+                assert_eq!(*op, UnaryOp::Neg);
+                match &**expr {
+                    Expr::Literal(Literal::Int(v)) => assert_eq!(*v, 5),
+                    _ => panic!("Expected 5"),
+                }
+            }
+            _ => panic!("Expected Unary expression"),
+        }
+    }
+}

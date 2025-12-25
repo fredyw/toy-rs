@@ -117,7 +117,8 @@ pub fn eval_expression(expr: ast::Expr, env: &mut Environment) -> Value {
                             args.len()
                         );
                     }
-                    let mut func_env = Environment::new();
+                    // Clone the current environment to support recursion (dynamic scoping).
+                    let mut func_env = env.clone();
                     for (param, arg_expr) in params.iter().zip(args) {
                         let arg_val = eval_expression(arg_expr, env);
                         func_env.define(param.clone(), arg_val);
@@ -172,5 +173,79 @@ fn eval_block(
         eval_expression(*expr, &mut block_env)
     } else {
         Value::Unit
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::lexer::Lexer;
+    use crate::parser::Parser;
+
+    fn eval_helper(input: &str) -> Value {
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+        let mut env = Environment::new();
+        let mut last_value = Value::Unit;
+        for stmt in program {
+            last_value = eval_statement(stmt, &mut env);
+        }
+        last_value
+    }
+
+    #[test]
+    fn test_arithmetic() {
+        assert_eq!(eval_helper("1 + 2 * 3"), Value::Int(7));
+        assert_eq!(eval_helper("(1 + 2) * 3"), Value::Int(9));
+        assert_eq!(eval_helper("10 / 2"), Value::Int(5));
+        assert_eq!(eval_helper("10.5 + 2.5"), Value::Float(13.0));
+    }
+
+    #[test]
+    fn test_boolean_logic() {
+        assert_eq!(eval_helper("true"), Value::Bool(true));
+        assert_eq!(eval_helper("!false"), Value::Bool(true));
+        assert_eq!(eval_helper("1 < 2"), Value::Bool(true));
+        assert_eq!(eval_helper("1 > 2"), Value::Bool(false));
+        assert_eq!(eval_helper("1 == 1"), Value::Bool(true));
+    }
+
+    #[test]
+    fn test_if_else() {
+        assert_eq!(eval_helper("if true { 1 } else { 2 }"), Value::Int(1));
+        assert_eq!(eval_helper("if false { 1 } else { 2 }"), Value::Int(2));
+    }
+
+    #[test]
+    fn test_variables() {
+        let input = "let x = 10; let y = 20; x + y";
+        assert_eq!(eval_helper(input), Value::Int(30));
+    }
+
+    #[test]
+    fn test_functions() {
+        let input = "
+            fn add(a, b) { a + b }
+            add(5, 7)
+        ";
+        assert_eq!(eval_helper(input), Value::Int(12));
+    }
+
+    #[test]
+    fn test_recursion() {
+        let input = "
+            fn fib(n) {
+                if n < 2 { n } else { fib(n - 1) + fib(n - 2) }
+            }
+            fib(10)
+        ";
+        assert_eq!(eval_helper(input), Value::Int(55));
+    }
+
+    #[test]
+    fn test_string_concatenation() {
+        let input = r#""Hello " + "World""#;
+        assert_eq!(eval_helper(input), Value::Str("Hello World".to_string()));
     }
 }

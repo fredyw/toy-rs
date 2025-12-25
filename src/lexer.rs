@@ -150,3 +150,90 @@ impl<'a> Lexer<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_next_token_basic() {
+        let input = "=+(){},;";
+        let mut lexer = Lexer::new(input);
+
+        assert_eq!(lexer.next_token(), Token::Eq);
+        assert_eq!(lexer.next_token(), Token::Plus);
+        assert_eq!(lexer.next_token(), Token::LParen);
+        assert_eq!(lexer.next_token(), Token::RParen);
+        assert_eq!(lexer.next_token(), Token::LBrace);
+        assert_eq!(lexer.next_token(), Token::RBrace);
+        assert_eq!(lexer.next_token(), Token::Comma);
+        assert_eq!(lexer.next_token(), Token::SemiColon);
+        assert_eq!(lexer.next_token(), Token::Eof);
+    }
+
+    #[test]
+    fn test_next_token_identifiers_and_keywords() {
+        let input = "let fn if else true false my_var";
+        let mut lexer = Lexer::new(input);
+
+        assert_eq!(lexer.next_token(), Token::Let);
+        assert_eq!(lexer.next_token(), Token::Fn);
+        assert_eq!(lexer.next_token(), Token::If);
+        assert_eq!(lexer.next_token(), Token::Else);
+        assert_eq!(lexer.next_token(), Token::True);
+        assert_eq!(lexer.next_token(), Token::False);
+        assert_eq!(lexer.next_token(), Token::Identifier("my_var".to_string()));
+        assert_eq!(lexer.next_token(), Token::Eof);
+    }
+
+    #[test]
+    fn test_next_token_numbers() {
+        let input = "123 3.14 0";
+        let mut lexer = Lexer::new(input);
+
+        assert_eq!(lexer.next_token(), Token::Int(123));
+        assert_eq!(lexer.next_token(), Token::Float(3.14));
+        assert_eq!(lexer.next_token(), Token::Int(0));
+        assert_eq!(lexer.next_token(), Token::Eof);
+    }
+
+    #[test]
+    fn test_next_token_strings() {
+        let input = r#""hello" "world""#;
+        let mut lexer = Lexer::new(input);
+
+        assert_eq!(lexer.next_token(), Token::Str("hello".to_string()));
+        assert_eq!(lexer.next_token(), Token::Str("world".to_string()));
+        assert_eq!(lexer.next_token(), Token::Eof);
+    }
+
+    #[test]
+    fn test_next_token_operators() {
+        let input = "+ - * / ! < > == =";
+        let mut lexer = Lexer::new(input);
+
+        assert_eq!(lexer.next_token(), Token::Plus);
+        assert_eq!(lexer.next_token(), Token::Minus);
+        assert_eq!(lexer.next_token(), Token::Star);
+        assert_eq!(lexer.next_token(), Token::Slash);
+        assert_eq!(lexer.next_token(), Token::Bang);
+        assert_eq!(lexer.next_token(), Token::Lt);
+        assert_eq!(lexer.next_token(), Token::Gt);
+        assert_eq!(lexer.next_token(), Token::EqEq);
+        assert_eq!(lexer.next_token(), Token::Eq);
+        assert_eq!(lexer.next_token(), Token::Eof);
+    }
+
+    #[test]
+    fn test_skip_whitespace() {
+        let input = "  \t\nlet  x = 5;";
+        let mut lexer = Lexer::new(input);
+
+        assert_eq!(lexer.next_token(), Token::Let);
+        assert_eq!(lexer.next_token(), Token::Identifier("x".to_string()));
+        assert_eq!(lexer.next_token(), Token::Eq);
+        assert_eq!(lexer.next_token(), Token::Int(5));
+        assert_eq!(lexer.next_token(), Token::SemiColon);
+        assert_eq!(lexer.next_token(), Token::Eof);
+    }
+}
