@@ -1,9 +1,0 @@
-fn hello() {
-    "hello"
-}
-
-fn world() {
-    "world"
-}
-
-hello() + " " + world()

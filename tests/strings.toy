@@ -1,0 +1,6 @@
+fn greet(name) {
+    "Hello, " + name + "!"
+}
+
+let user = "Toy User";
+greet(user)

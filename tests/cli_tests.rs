@@ -1,37 +1,37 @@
 use std::process::Command;
 
 #[test]
-fn test_cli_test1() {
+fn test_cli_recursion() {
     let output = Command::new("cargo")
-        .args(&["run", "--quiet", "--", "tests/test1.toy"])
+        .args(&["run", "--quiet", "--", "tests/recursion.toy"])
         .output()
         .expect("Failed to run cargo");
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert_eq!(stdout.trim(), "35");
+    assert_eq!(stdout.trim(), "55");
 }
 
 #[test]
-fn test_cli_test2() {
+fn test_cli_math() {
     let output = Command::new("cargo")
-        .args(&["run", "--quiet", "--", "tests/test2.toy"])
+        .args(&["run", "--quiet", "--", "tests/math.toy"])
         .output()
         .expect("Failed to run cargo");
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert_eq!(stdout.trim(), "hello world");
+    assert_eq!(stdout.trim(), "22.5");
 }
 
 #[test]
-fn test_cli_test3() {
+fn test_cli_strings() {
     let output = Command::new("cargo")
-        .args(&["run", "--quiet", "--", "tests/test3.toy"])
+        .args(&["run", "--quiet", "--", "tests/strings.toy"])
         .output()
         .expect("Failed to run cargo");
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert_eq!(stdout.trim(), "-10");
+    assert_eq!(stdout.trim(), "Hello, Toy User!");
 }

@@ -1,0 +1,10 @@
+fn calculate(a, b, c) {
+    let result = (a + b) * c;
+    result / 2.0
+}
+
+let x = 10;
+let y = 20;
+let z = 1.5;
+
+calculate(x, y, z)

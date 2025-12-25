@@ -73,6 +73,15 @@ pub fn eval_expression(expr: ast::Expr, env: &mut Environment) -> Value {
                 (Value::Int(l), BinaryOp::Lt, Value::Int(r)) => Value::Bool(l < r),
                 (Value::Int(l), BinaryOp::Gt, Value::Int(r)) => Value::Bool(l > r),
                 (Value::Int(l), BinaryOp::Eq, Value::Int(r)) => Value::Bool(l == r),
+                // Mixed math (Int and Float).
+                (Value::Int(l), BinaryOp::Add, Value::Float(r)) => Value::Float(l as f64 + r),
+                (Value::Float(l), BinaryOp::Add, Value::Int(r)) => Value::Float(l + r as f64),
+                (Value::Int(l), BinaryOp::Sub, Value::Float(r)) => Value::Float(l as f64 - r),
+                (Value::Float(l), BinaryOp::Sub, Value::Int(r)) => Value::Float(l - r as f64),
+                (Value::Int(l), BinaryOp::Mul, Value::Float(r)) => Value::Float(l as f64 * r),
+                (Value::Float(l), BinaryOp::Mul, Value::Int(r)) => Value::Float(l * r as f64),
+                (Value::Int(l), BinaryOp::Div, Value::Float(r)) => Value::Float(l as f64 / r),
+                (Value::Float(l), BinaryOp::Div, Value::Int(r)) => Value::Float(l / r as f64),
                 // Float math.
                 (Value::Float(l), BinaryOp::Add, Value::Float(r)) => Value::Float(l + r),
                 (Value::Float(l), BinaryOp::Sub, Value::Float(r)) => Value::Float(l - r),
