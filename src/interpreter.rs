@@ -143,7 +143,11 @@ pub fn eval_statement(stmt: ast::Stmt, env: &mut Environment) -> Value {
             env.define(name, func_value);
             Value::Unit
         }
-        ast::Stmt::Expression(expr) => eval_expression(expr, env),
+        ast::Stmt::Expression(expr) => {
+            eval_expression(expr, env);
+            Value::Unit
+        }
+        ast::Stmt::ImplicitReturn(expr) => eval_expression(expr, env),
     }
 }
 

@@ -39,4 +39,5 @@ pub enum Stmt {
     Let(String, Expr),
     Fn(String, Vec<String>, Expr),
     Expression(Expr),
+    ImplicitReturn(Expr),
 }

@@ -43,7 +43,7 @@ impl<'a> Parser<'a> {
                     } else {
                         // If there is NO semicolon, it is only allowed if we are at EOF.
                         if self.current_token == Token::Eof {
-                            statements.push(Stmt::Expression(expr));
+                            statements.push(Stmt::ImplicitReturn(expr));
                         } else {
                             panic!("Expected ';' after expression");
                         }
