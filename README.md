@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![toy-rs](https://github.com/fredyw/toy-rs/actions/workflows/toy-rs.yml/badge.svg)](https://github.com/fredyw/toy-rs/actions/workflows/toy-rs.yml)
 
-A toy programming language with Rust-like syntax for educational purposes written in Rust.
+A toy programming language written in Rust, featuring Rust-like syntax for educational purposes.
 
 ## Table of Contents
 
