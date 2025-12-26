@@ -14,5 +14,4 @@ fn test_negation(a, b) {
     }
 }
 
-// true && false || true -> false || true -> true
 test_logic(true, false, true) + " " + test_negation(false, true)
