@@ -434,4 +434,11 @@ mod tests {
             _ => panic!("Expected Unary expression"),
         }
     }
+
+    #[test]
+    fn test_only_comments() {
+        let input = "// first comment\n// second comment";
+        let statements = parse_helper(input);
+        assert_eq!(statements.len(), 0);
+    }
 }
