@@ -1,6 +1,6 @@
 use crate::ast;
 use crate::ast::BinaryOp;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -199,12 +199,16 @@ fn eval_block(
     env: &mut Environment,
 ) -> Value {
     let mut block_env = env.clone();
+    let mut local_vars = HashSet::new();
     for stmt in statements {
+        if let ast::Stmt::Let(name, _) = &stmt {
+            local_vars.insert(name.clone());
+        }
         eval_statement(stmt, &mut block_env);
     }
     // Propagate assignments back to the parent environment.
     for (name, value) in block_env.values.iter() {
-        if env.values.contains_key(name) {
+        if env.values.contains_key(name) && !local_vars.contains(name) {
             env.define(name.clone(), value.clone());
         }
     }
@@ -257,5 +261,46 @@ mod tests {
             result
         ";
         assert_eq!(eval_helper(input), Value::Int(15));
+    }
+
+    #[test]
+    fn test_logical_negation() {
+        assert_eq!(eval_helper("!true"), Value::Bool(false));
+        assert_eq!(eval_helper("!false"), Value::Bool(true));
+        assert_eq!(eval_helper("!!true"), Value::Bool(true));
+    }
+
+    #[test]
+    fn test_precedence_complex() {
+        // 1 + (2 * 3) - (4 / 2) = 1 + 6 - 2 = 5
+        assert_eq!(eval_helper("1 + 2 * 3 - 4 / 2"), Value::Int(5));
+    }
+
+    #[test]
+    fn test_shadowing() {
+        let input = "
+            let x = 10;
+            if true {
+                let x = 20; // Shadowing
+                x + 1 // 21
+            }
+            x // Should remain 10
+        ";
+        assert_eq!(eval_helper(input), Value::Int(10));
+    }
+
+    #[test]
+    fn test_if_expression_value() {
+        let input = "
+            let x = if true { 10 } else { 20 };
+            x + 5
+        ";
+        assert_eq!(eval_helper(input), Value::Int(15));
+    }
+
+    #[test]
+    #[should_panic(expected = "Undefined variable: z")]
+    fn test_undefined_variable() {
+        eval_helper("let x = 10; x + z");
     }
 }
