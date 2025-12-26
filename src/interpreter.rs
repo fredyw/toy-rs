@@ -232,7 +232,7 @@ mod tests {
         }
         last_value
     }
-    // ...
+
     #[test]
     fn test_scope_mutation() {
         let input = "

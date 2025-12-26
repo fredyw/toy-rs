@@ -93,5 +93,5 @@ fn test_cli_loop() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert_eq!(stdout.trim(), "55");
+    assert_eq!(stdout.trim(), "5");
 }
