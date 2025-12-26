@@ -1,0 +1,9 @@
+fn test_logic(a, b, c) {
+    if a && b || c {
+        "pass"
+    } else {
+        "fail"
+    }
+}
+
+test_logic(true, false, true)

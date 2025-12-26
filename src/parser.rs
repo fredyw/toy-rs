@@ -213,7 +213,9 @@ impl<'a> Parser<'a> {
             Token::Star | Token::Slash => 20,         // * and / happen first
             Token::Plus | Token::Minus => 10,         // + and - happen after
             Token::EqEq | Token::Lt | Token::Gt => 5, // Comparisons happen last
-            _ => 0,                                   // Not an operator
+            Token::And => 3,
+            Token::Or => 1,
+            _ => 0, // Not an operator
         }
     }
 
@@ -226,6 +228,8 @@ impl<'a> Parser<'a> {
             Token::EqEq => Some(BinaryOp::Eq),
             Token::Lt => Some(BinaryOp::Lt),
             Token::Gt => Some(BinaryOp::Gt),
+            Token::And => Some(BinaryOp::And),
+            Token::Or => Some(BinaryOp::Or),
             _ => None,
         }
     }

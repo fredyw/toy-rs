@@ -26,6 +26,8 @@ pub enum Token {
     Lt,
     Gt,
     Bang,
+    And,
+    Or,
     LParen,
     RParen,
     LBrace,
@@ -116,6 +118,22 @@ impl<'a> Lexer<'a> {
                     Token::EqEq
                 } else {
                     Token::Eq
+                }
+            }
+            Some('&') => {
+                if let Some(&'&') = self.input.peek() {
+                    self.input.next(); // Eat second `&`,
+                    Token::And
+                } else {
+                    panic!("Unexpected character '&'. Did you mean '&&'?");
+                }
+            }
+            Some('|') => {
+                if let Some(&'|') = self.input.peek() {
+                    self.input.next(); // Eat second `|`.
+                    Token::Or
+                } else {
+                    panic!("Unexpected character '|'. Did you mean '||'?");
                 }
             }
             Some('"') => self.read_string(),

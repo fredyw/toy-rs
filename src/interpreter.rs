@@ -96,6 +96,9 @@ pub fn eval_expression(expr: ast::Expr, env: &mut Environment) -> Value {
                     new_string.push_str(&r);
                     Value::Str(new_string)
                 }
+                // Logical operations.
+                (Value::Bool(l), BinaryOp::And, Value::Bool(r)) => Value::Bool(l && r),
+                (Value::Bool(l), BinaryOp::Or, Value::Bool(r)) => Value::Bool(l || r),
                 (l, op, r) => panic!("Type mismatch: {:?} {:?} {:?}", l, op, r),
             }
         }
@@ -291,5 +294,27 @@ mod tests {
             z
         ";
         assert_eq!(eval_helper(input_mixed), Value::Float(12.5));
+    }
+
+    #[test]
+    fn test_logical_ops() {
+        assert_eq!(eval_helper("true && true"), Value::Bool(true));
+        assert_eq!(eval_helper("true && false"), Value::Bool(false));
+        assert_eq!(eval_helper("false && true"), Value::Bool(false));
+        assert_eq!(eval_helper("false && false"), Value::Bool(false));
+
+        assert_eq!(eval_helper("true || true"), Value::Bool(true));
+        assert_eq!(eval_helper("true || false"), Value::Bool(true));
+        assert_eq!(eval_helper("false || true"), Value::Bool(true));
+        assert_eq!(eval_helper("false || false"), Value::Bool(false));
+
+        // Precedence: && is higher than ||
+        assert_eq!(eval_helper("true || false && false"), Value::Bool(true));
+        // (true || false) && false -> true && false -> false
+        assert_eq!(eval_helper("(true || false) && false"), Value::Bool(false));
+
+        // With comparisons.
+        assert_eq!(eval_helper("1 < 2 && 3 > 2"), Value::Bool(true));
+        assert_eq!(eval_helper("1 < 2 || 3 < 2"), Value::Bool(true));
     }
 }

@@ -15,6 +15,8 @@ pub enum BinaryOp {
     Lt,
     Gt,
     Eq,
+    And,
+    Or,
 }
 
 #[derive(Debug, Clone, PartialEq)]

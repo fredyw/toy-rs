@@ -71,3 +71,15 @@ fn test_cli_comments() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert_eq!(stdout.trim(), "30");
 }
+
+#[test]
+fn test_cli_logical() {
+    let output = Command::new("cargo")
+        .args(&["run", "--quiet", "--", "tests/logical.toy"])
+        .output()
+        .expect("Failed to run cargo");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert_eq!(stdout.trim(), "pass");
+}
