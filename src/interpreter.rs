@@ -58,10 +58,25 @@ impl Environment {
         env.define(
             "println".to_string(),
             Value::NativeFunc(|args| {
-                for arg in args {
-                    print!("{} ", arg);
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        print!(" ");
+                    }
+                    print!("{}", arg);
                 }
                 println!();
+                Value::Unit
+            }),
+        );
+        env.define(
+            "print".to_string(),
+            Value::NativeFunc(|args| {
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        print!(" ");
+                    }
+                    print!("{}", arg);
+                }
                 Value::Unit
             }),
         );
@@ -337,7 +352,8 @@ mod tests {
     }
 
     #[test]
-    fn test_println() {
-        assert_eq!(eval_helper(r#"println("hello")"#), Value::Unit);
+    fn test_print_functions() {
+        assert_eq!(eval_helper(r#"print("hello")"#), Value::Unit);
+        assert_eq!(eval_helper(r#"println("world")"#), Value::Unit);
     }
 }
