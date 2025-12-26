@@ -478,4 +478,111 @@ mod tests {
         let statements = parse_helper(input);
         assert_eq!(statements.len(), 0);
     }
+
+    #[test]
+    fn test_while_statement() {
+        let input = "while true { 1 }";
+        let statements = parse_helper(input);
+        assert_eq!(statements.len(), 1);
+        match &statements[0] {
+            Stmt::While(cond, body) => {
+                match cond {
+                    Expr::Literal(Literal::Bool(b)) => assert_eq!(*b, true),
+                    _ => panic!("Expected boolean literal"),
+                }
+                match body {
+                    Expr::Block(stmts, tail) => {
+                        assert_eq!(stmts.len(), 0);
+                        match tail {
+                            Some(expr) => match &**expr {
+                                Expr::Literal(Literal::Int(v)) => assert_eq!(*v, 1),
+                                _ => panic!("Expected 1"),
+                            },
+                            None => panic!("Expected tail expression"),
+                        }
+                    }
+                    _ => panic!("Expected block"),
+                }
+            }
+            _ => panic!("Expected While statement"),
+        }
+    }
+
+    #[test]
+    fn test_assignment() {
+        // Simple assignment
+        let input = "x = 5;";
+        let statements = parse_helper(input);
+        match &statements[0] {
+            Stmt::Assign(name, expr) => {
+                assert_eq!(name, "x");
+                match expr {
+                    Expr::Literal(Literal::Int(v)) => assert_eq!(*v, 5),
+                    _ => panic!("Expected 5"),
+                }
+            }
+            _ => panic!("Expected Assign statement"),
+        }
+
+        // Compound assignment
+        let input = "x += 1;";
+        let statements = parse_helper(input);
+        match &statements[0] {
+            Stmt::Assign(name, expr) => {
+                assert_eq!(name, "x");
+                // x += 1 parses to x = x + 1
+                match expr {
+                    Expr::Binary(lhs, op, rhs) => {
+                        assert_eq!(*op, BinaryOp::Add);
+                        match &**lhs {
+                            Expr::Variable(n) => assert_eq!(n, "x"),
+                            _ => panic!("Expected variable x"),
+                        }
+                        match &**rhs {
+                            Expr::Literal(Literal::Int(v)) => assert_eq!(*v, 1),
+                            _ => panic!("Expected 1"),
+                        }
+                    }
+                    _ => panic!("Expected binary expression"),
+                }
+            }
+            _ => panic!("Expected Assign statement"),
+        }
+    }
+
+    #[test]
+    fn test_logical_precedence() {
+        let input = "true || false && false;";
+        let statements = parse_helper(input);
+        match &statements[0] {
+            Stmt::Expression(expr) => {
+                // Expected: true || (false && false)
+                match expr {
+                    Expr::Binary(lhs, op, rhs) => {
+                        assert_eq!(*op, BinaryOp::Or);
+                        match &**lhs {
+                            Expr::Literal(Literal::Bool(b)) => assert!(b),
+                            _ => panic!("Expected true"),
+                        }
+                        match &**rhs {
+                            Expr::Binary(r_lhs, r_op, r_rhs) => {
+                                assert_eq!(*r_op, BinaryOp::And);
+                                match &**r_lhs {
+                                    Expr::Literal(Literal::Bool(b)) => assert!(!b),
+                                    _ => panic!("Expected false"),
+                                }
+                                match &**r_rhs {
+                                    Expr::Literal(Literal::Bool(b)) => assert!(!b),
+                                    _ => panic!("Expected false"),
+                                }
+                            }
+                            _ => panic!("Expected AND expression on RHS"),
+                        }
+                    }
+                    _ => panic!("Expected OR expression"),
+                }
+            }
+            _ => panic!("Expected Expression statement"),
+        }
+    }
 }
