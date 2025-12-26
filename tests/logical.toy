@@ -6,4 +6,13 @@ fn test_logic(a, b, c) {
     }
 }
 
-test_logic(true, false, true)
+fn test_negation(a, b) {
+    if !a && b {
+        "pass"
+    } else {
+        "fail"
+    }
+}
+
+// true && false || true -> false || true -> true
+test_logic(true, false, true) + " " + test_negation(false, true)

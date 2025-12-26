@@ -81,5 +81,5 @@ fn test_cli_logical() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert_eq!(stdout.trim(), "pass");
+    assert_eq!(stdout.trim(), "pass pass");
 }
