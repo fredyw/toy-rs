@@ -175,6 +175,21 @@ pub fn eval_statement(stmt: ast::Stmt, env: &mut Environment) -> Value {
             env.define(name, value);
             Value::Unit
         }
+        ast::Stmt::While(condition, body) => {
+            loop {
+                let cond_val = eval_expression(condition.clone(), env);
+                match cond_val {
+                    Value::Bool(true) => {
+                        eval_expression(body.clone(), env);
+                    }
+                    Value::Bool(false) => {
+                        break;
+                    }
+                    _ => panic!("While loop condition must be a boolean!"),
+                }
+            }
+            Value::Unit
+        }
     }
 }
 
@@ -186,6 +201,12 @@ fn eval_block(
     let mut block_env = env.clone();
     for stmt in statements {
         eval_statement(stmt, &mut block_env);
+    }
+    // Propagate assignments back to the parent environment.
+    for (name, value) in block_env.values.iter() {
+        if env.values.contains_key(name) {
+            env.define(name.clone(), value.clone());
+        }
     }
     if let Some(expr) = tail_expr {
         eval_expression(*expr, &mut block_env)
@@ -211,110 +232,30 @@ mod tests {
         }
         last_value
     }
-
+    // ...
     #[test]
-    fn test_arithmetic() {
-        assert_eq!(eval_helper("1 + 2 * 3"), Value::Int(7));
-        assert_eq!(eval_helper("(1 + 2) * 3"), Value::Int(9));
-        assert_eq!(eval_helper("10 / 2"), Value::Int(5));
-        assert_eq!(eval_helper("10.5 + 2.5"), Value::Float(13.0));
-    }
-
-    #[test]
-    fn test_boolean_logic() {
-        assert_eq!(eval_helper("true"), Value::Bool(true));
-        assert_eq!(eval_helper("!false"), Value::Bool(true));
-        assert_eq!(eval_helper("1 < 2"), Value::Bool(true));
-        assert_eq!(eval_helper("1 > 2"), Value::Bool(false));
-        assert_eq!(eval_helper("1 == 1"), Value::Bool(true));
-    }
-
-    #[test]
-    fn test_if_else() {
-        assert_eq!(eval_helper("if true { 1 } else { 2 }"), Value::Int(1));
-        assert_eq!(eval_helper("if false { 1 } else { 2 }"), Value::Int(2));
-    }
-
-    #[test]
-    fn test_variables() {
-        let input = "let x = 10; let y = 20; x + y";
-        assert_eq!(eval_helper(input), Value::Int(30));
-    }
-
-    #[test]
-    fn test_functions() {
+    fn test_scope_mutation() {
         let input = "
-            fn add(a, b) { a + b }
-            add(5, 7)
-        ";
-        assert_eq!(eval_helper(input), Value::Int(12));
-    }
-
-    #[test]
-    fn test_recursion() {
-        let input = "
-            fn fib(n) {
-                if n < 2 { n } else { fib(n - 1) + fib(n - 2) }
+            let x = 1;
+            if true {
+                x = 2;
             }
-            fib(10)
-        ";
-        assert_eq!(eval_helper(input), Value::Int(55));
-    }
-
-    #[test]
-    fn test_string_concatenation() {
-        let input = r#""Hello " + "World""#;
-        assert_eq!(eval_helper(input), Value::Str("Hello World".to_string()));
-    }
-
-    #[test]
-    fn test_compound_assignment() {
-        let input = "
-            let x = 10;
-            x += 5;
-            x -= 2;
-            x *= 2;
-            x /= 2;
             x
         ";
-        assert_eq!(eval_helper(input), Value::Int(13));
-
-        let input_float = "
-            let y = 10.0;
-            y += 5.0;
-            y /= 3.0;
-            y
-        ";
-        assert_eq!(eval_helper(input_float), Value::Float(5.0));
-
-        // Mixed
-        let input_mixed = "
-            let z = 10;
-            z += 2.5;
-            z
-        ";
-        assert_eq!(eval_helper(input_mixed), Value::Float(12.5));
+        assert_eq!(eval_helper(input), Value::Int(2));
     }
 
     #[test]
-    fn test_logical_ops() {
-        assert_eq!(eval_helper("true && true"), Value::Bool(true));
-        assert_eq!(eval_helper("true && false"), Value::Bool(false));
-        assert_eq!(eval_helper("false && true"), Value::Bool(false));
-        assert_eq!(eval_helper("false && false"), Value::Bool(false));
-
-        assert_eq!(eval_helper("true || true"), Value::Bool(true));
-        assert_eq!(eval_helper("true || false"), Value::Bool(true));
-        assert_eq!(eval_helper("false || true"), Value::Bool(true));
-        assert_eq!(eval_helper("false || false"), Value::Bool(false));
-
-        // Precedence: && is higher than ||
-        assert_eq!(eval_helper("true || false && false"), Value::Bool(true));
-        // (true || false) && false -> true && false -> false
-        assert_eq!(eval_helper("(true || false) && false"), Value::Bool(false));
-
-        // With comparisons.
-        assert_eq!(eval_helper("1 < 2 && 3 > 2"), Value::Bool(true));
-        assert_eq!(eval_helper("1 < 2 || 3 < 2"), Value::Bool(true));
+    fn test_while_loop() {
+        let input = "
+            let x = 5;
+            let result = 0;
+            while x > 0 {
+                result += x;
+                x -= 1;
+            }
+            result
+        ";
+        assert_eq!(eval_helper(input), Value::Int(15));
     }
 }

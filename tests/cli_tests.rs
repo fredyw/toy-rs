@@ -2,10 +2,10 @@ use std::process::Command;
 
 #[test]
 fn test_cli_recursion() {
-    let output = Command::new("cargo")
-        .args(&["run", "--quiet", "--", "tests/recursion.toy"])
+    let output = Command::new(env!("CARGO_BIN_EXE_toy-rs"))
+        .args(&["tests/recursion.toy"])
         .output()
-        .expect("Failed to run cargo");
+        .expect("Failed to run binary");
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -14,10 +14,10 @@ fn test_cli_recursion() {
 
 #[test]
 fn test_cli_math() {
-    let output = Command::new("cargo")
-        .args(&["run", "--quiet", "--", "tests/math.toy"])
+    let output = Command::new(env!("CARGO_BIN_EXE_toy-rs"))
+        .args(&["tests/math.toy"])
         .output()
-        .expect("Failed to run cargo");
+        .expect("Failed to run binary");
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -26,10 +26,10 @@ fn test_cli_math() {
 
 #[test]
 fn test_cli_strings() {
-    let output = Command::new("cargo")
-        .args(&["run", "--quiet", "--", "tests/strings.toy"])
+    let output = Command::new(env!("CARGO_BIN_EXE_toy-rs"))
+        .args(&["tests/strings.toy"])
         .output()
-        .expect("Failed to run cargo");
+        .expect("Failed to run binary");
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -38,10 +38,10 @@ fn test_cli_strings() {
 
 #[test]
 fn test_cli_control_flow() {
-    let output = Command::new("cargo")
-        .args(&["run", "--quiet", "--", "tests/control_flow.toy"])
+    let output = Command::new(env!("CARGO_BIN_EXE_toy-rs"))
+        .args(&["tests/control_flow.toy"])
         .output()
-        .expect("Failed to run cargo");
+        .expect("Failed to run binary");
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -50,10 +50,10 @@ fn test_cli_control_flow() {
 
 #[test]
 fn test_cli_assignment() {
-    let output = Command::new("cargo")
-        .args(&["run", "--quiet", "--", "tests/assignment.toy"])
+    let output = Command::new(env!("CARGO_BIN_EXE_toy-rs"))
+        .args(&["tests/assignment.toy"])
         .output()
-        .expect("Failed to run cargo");
+        .expect("Failed to run binary");
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -62,10 +62,10 @@ fn test_cli_assignment() {
 
 #[test]
 fn test_cli_comments() {
-    let output = Command::new("cargo")
-        .args(&["run", "--quiet", "--", "tests/comments.toy"])
+    let output = Command::new(env!("CARGO_BIN_EXE_toy-rs"))
+        .args(&["tests/comments.toy"])
         .output()
-        .expect("Failed to run cargo");
+        .expect("Failed to run binary");
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -74,12 +74,24 @@ fn test_cli_comments() {
 
 #[test]
 fn test_cli_logical() {
-    let output = Command::new("cargo")
-        .args(&["run", "--quiet", "--", "tests/logical.toy"])
+    let output = Command::new(env!("CARGO_BIN_EXE_toy-rs"))
+        .args(&["tests/logical.toy"])
         .output()
-        .expect("Failed to run cargo");
+        .expect("Failed to run binary");
 
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert_eq!(stdout.trim(), "pass pass");
+}
+
+#[test]
+fn test_cli_loop() {
+    let output = Command::new(env!("CARGO_BIN_EXE_toy-rs"))
+        .args(&["tests/loop.toy"])
+        .output()
+        .expect("Failed to run binary");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert_eq!(stdout.trim(), "55");
 }

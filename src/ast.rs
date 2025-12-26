@@ -43,4 +43,5 @@ pub enum Stmt {
     Expression(Expr),
     ImplicitReturn(Expr),
     Assign(String, Expr),
+    While(Expr, Expr),
 }

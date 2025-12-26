@@ -42,6 +42,9 @@ impl<'a> Parser<'a> {
                 Token::Let | Token::Fn => {
                     statements.push(self.parse_statement());
                 }
+                Token::While => {
+                    statements.push(self.parse_while_statement());
+                }
                 // Expressions (e.g., "1 + 1") or Assignments (e.g. "x += 1")
                 _ => {
                     statements.push(self.parse_expression_statement());
@@ -84,9 +87,18 @@ impl<'a> Parser<'a> {
             Token::Let => self.parse_let_statement(),
             // For example: fn foo() {}
             Token::Fn => self.parse_function_statement(),
+            // For example: while cond {}
+            Token::While => self.parse_while_statement(),
             // For example: a + 1;
             _ => self.parse_expression_statement(),
         }
+    }
+
+    fn parse_while_statement(&mut self) -> Stmt {
+        self.advance(); // Eat `while`.
+        let condition = self.parse_expression(0);
+        let body = self.parse_block();
+        Stmt::While(condition, body)
     }
 
     fn parse_block(&mut self) -> Expr {
@@ -101,12 +113,15 @@ impl<'a> Parser<'a> {
                 Token::Fn => {
                     statements.push(self.parse_function_statement());
                 }
+                Token::While => {
+                    statements.push(self.parse_while_statement());
+                }
                 _ => {
                     let expr = self.parse_expression(0);
 
                     if matches!(
                         self.current_token,
-                        Token::PlusEq | Token::MinusEq | Token::StarEq | Token::SlashEq
+                        Token::PlusEq | Token::MinusEq | Token::StarEq | Token::SlashEq | Token::Eq
                     ) {
                         let name = match expr {
                             Expr::Variable(n) => n,
@@ -119,6 +134,13 @@ impl<'a> Parser<'a> {
                             Token::MinusEq => BinaryOp::Sub,
                             Token::StarEq => BinaryOp::Mul,
                             Token::SlashEq => BinaryOp::Div,
+                            Token::Eq => {
+                                self.advance();
+                                let right = self.parse_expression(0);
+                                self.expect(Token::SemiColon);
+                                statements.push(Stmt::Assign(name, right));
+                                continue;
+                            }
                             _ => unreachable!(),
                         };
                         self.advance(); // Eat the operator (+=, etc).
@@ -252,12 +274,18 @@ impl<'a> Parser<'a> {
         let expr = self.parse_expression(0);
         if matches!(
             self.current_token,
-            Token::PlusEq | Token::MinusEq | Token::StarEq | Token::SlashEq
+            Token::PlusEq | Token::MinusEq | Token::StarEq | Token::SlashEq | Token::Eq
         ) {
             let name = match expr {
                 Expr::Variable(n) => n,
                 _ => panic!("Invalid assignment target. Only variables can be assigned to."),
             };
+            if self.current_token == Token::Eq {
+                self.advance();
+                let right = self.parse_expression(0);
+                self.expect(Token::SemiColon);
+                return Stmt::Assign(name, right);
+            }
             let op = match self.current_token {
                 Token::PlusEq => BinaryOp::Add,
                 Token::MinusEq => BinaryOp::Sub,
@@ -273,8 +301,13 @@ impl<'a> Parser<'a> {
             return Stmt::Assign(name, new_value_expr);
         }
 
+        // Allow omitting semicolon for block-like expressions (If, Block)
+        let is_block_like = matches!(expr, Expr::If(..) | Expr::Block(..));
+
         if self.current_token == Token::SemiColon {
             self.advance();
+            Stmt::Expression(expr)
+        } else if is_block_like {
             Stmt::Expression(expr)
         } else if self.current_token == Token::Eof {
             Stmt::ImplicitReturn(expr)
