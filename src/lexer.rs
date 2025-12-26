@@ -235,13 +235,14 @@ mod tests {
 
     #[test]
     fn test_next_token_identifiers_and_keywords() {
-        let input = "let fn if else true false my_var";
+        let input = "let fn if else while true false my_var";
         let mut lexer = Lexer::new(input);
 
         assert_eq!(lexer.next_token(), Token::Let);
         assert_eq!(lexer.next_token(), Token::Fn);
         assert_eq!(lexer.next_token(), Token::If);
         assert_eq!(lexer.next_token(), Token::Else);
+        assert_eq!(lexer.next_token(), Token::While);
         assert_eq!(lexer.next_token(), Token::True);
         assert_eq!(lexer.next_token(), Token::False);
         assert_eq!(lexer.next_token(), Token::Identifier("my_var".to_string()));
@@ -271,7 +272,7 @@ mod tests {
 
     #[test]
     fn test_next_token_operators() {
-        let input = "+ - * / ! < > == =";
+        let input = "+ - * / ! < > == = && || += -= *= /=";
         let mut lexer = Lexer::new(input);
 
         assert_eq!(lexer.next_token(), Token::Plus);
@@ -283,6 +284,12 @@ mod tests {
         assert_eq!(lexer.next_token(), Token::Gt);
         assert_eq!(lexer.next_token(), Token::EqEq);
         assert_eq!(lexer.next_token(), Token::Eq);
+        assert_eq!(lexer.next_token(), Token::And);
+        assert_eq!(lexer.next_token(), Token::Or);
+        assert_eq!(lexer.next_token(), Token::PlusEq);
+        assert_eq!(lexer.next_token(), Token::MinusEq);
+        assert_eq!(lexer.next_token(), Token::StarEq);
+        assert_eq!(lexer.next_token(), Token::SlashEq);
         assert_eq!(lexer.next_token(), Token::Eof);
     }
 
