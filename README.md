@@ -5,6 +5,34 @@
 
 A toy programming language with Rust-like syntax written in Rust.
 
+### Building
+
+To build the project, you need to have Rust installed. You can install it from [here](https://www.rust-lang.org/tools/install).
+
+Once you have Rust installed, you can build the project by running the following command:
+
+```
+./build.sh --release
+```
+
+The binary will be located in `target/release/toy-rs`.
+
+### Installing
+
+To install `toy-rs`, you can use the following command.
+
+```
+./install.sh
+```
+
+### Testing
+
+To run the tests, you can use the following command.
+
+```
+./test.sh
+```
+
 ### Usage
 
 ```
@@ -106,32 +134,4 @@ Single-line comments starting with `//` are supported.
 ```rust
 // This is a comment
 let x = 5; // Inline comment
-```
-
-### Building
-
-To build the project, you need to have Rust installed. You can install it from [here](https://www.rust-lang.org/tools/install).
-
-Once you have Rust installed, you can build the project by running the following command:
-
-```
-./build.sh --release
-```
-
-The binary will be located in `target/release/toy-rs`.
-
-### Installing
-
-To install `toy-rs`, you can use the following command.
-
-```
-./install.sh
-```
-
-### Testing
-
-To run the tests, you can use the following command.
-
-```
-./test.sh
 ```
