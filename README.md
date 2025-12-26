@@ -88,6 +88,17 @@ let status = if x > 5 {
 };
 ```
 
+#### Loops
+
+`while` loops are supported for repeated execution based on a boolean condition.
+
+```rust
+let i = 0;
+while i < 5 {
+    i += 1;
+}
+```
+
 #### Comments
 
 Single-line comments starting with `//` are supported.
