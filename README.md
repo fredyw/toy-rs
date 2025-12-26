@@ -12,6 +12,7 @@ A toy programming language with Rust-like syntax for educational purposes writte
 - [Testing](#testing)
 - [Usage](#usage)
 - [Syntax](#syntax)
+- [Built-in Functions](#built-in-functions)
 
 ### Building
 
@@ -133,6 +134,19 @@ let i = 0;
 while i < 5 {
     i += 1;
 }
+```
+
+#### Built-in Functions
+
+`toy-rs` includes built-in functions for output.
+
+- `print(args...)`: Prints arguments separated by spaces.
+- `println(args...)`: Prints arguments separated by spaces, followed by a newline.
+
+```rust
+print("The answer is", 42);
+println(); // Just a newline
+println("Done.");
 ```
 
 #### Comments
