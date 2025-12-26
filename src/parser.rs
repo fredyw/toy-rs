@@ -8,7 +8,10 @@ pub struct Parser<'a> {
 
 impl<'a> Parser<'a> {
     pub fn new(mut lexer: Lexer<'a>) -> Self {
-        let first_token = lexer.next_token();
+        let mut first_token = lexer.next_token();
+        while let Token::Comment = first_token {
+            first_token = lexer.next_token();
+        }
         Parser {
             lexer,
             current_token: first_token,
@@ -16,7 +19,12 @@ impl<'a> Parser<'a> {
     }
 
     fn advance(&mut self) {
-        self.current_token = self.lexer.next_token();
+        loop {
+            self.current_token = self.lexer.next_token();
+            if !matches!(self.current_token, Token::Comment) {
+                break;
+            }
+        }
     }
 
     fn expect(&mut self, expected: Token) {

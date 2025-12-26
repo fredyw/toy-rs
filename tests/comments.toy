@@ -1,0 +1,12 @@
+// This is a leading comment
+let x = 10; // Inline comment
+// Middle comment
+let y = 20;
+
+fn add(a, b) {
+    // Comment inside function
+    a + b
+}
+
+add(x, y) // Trailing comment
+// Final comment

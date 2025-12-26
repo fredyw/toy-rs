@@ -32,6 +32,7 @@ pub enum Token {
     RBrace,
     SemiColon,
     Comma,
+    Comment,
     Eof,
 }
 
@@ -88,7 +89,6 @@ impl<'a> Lexer<'a> {
                     self.input.next();
                     Token::SlashEq
                 } else if let Some(&'/') = self.input.peek() {
-                    // Comment detected. Consume until newline.
                     self.input.next(); // Eat the second `/`.
                     while let Some(&ch) = self.input.peek() {
                         if ch == '\n' {
@@ -96,7 +96,7 @@ impl<'a> Lexer<'a> {
                         }
                         self.input.next();
                     }
-                    self.next_token()
+                    Token::Comment
                 } else {
                     Token::Slash
                 }
@@ -276,6 +276,20 @@ mod tests {
         assert_eq!(lexer.next_token(), Token::Eq);
         assert_eq!(lexer.next_token(), Token::Int(5));
         assert_eq!(lexer.next_token(), Token::SemiColon);
+        assert_eq!(lexer.next_token(), Token::Eof);
+    }
+
+    #[test]
+    fn test_comments_token() {
+        let input = "let x = 5; // comment";
+        let mut lexer = Lexer::new(input);
+
+        assert_eq!(lexer.next_token(), Token::Let);
+        assert_eq!(lexer.next_token(), Token::Identifier("x".to_string()));
+        assert_eq!(lexer.next_token(), Token::Eq);
+        assert_eq!(lexer.next_token(), Token::Int(5));
+        assert_eq!(lexer.next_token(), Token::SemiColon);
+        assert_eq!(lexer.next_token(), Token::Comment);
         assert_eq!(lexer.next_token(), Token::Eof);
     }
 }
