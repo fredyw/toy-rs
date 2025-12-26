@@ -95,3 +95,15 @@ fn test_cli_loop() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert_eq!(stdout.trim(), "5");
 }
+
+#[test]
+fn test_cli_println() {
+    let output = Command::new(env!("CARGO_BIN_EXE_toy-rs"))
+        .args(&["tests/println.toy"])
+        .output()
+        .expect("Failed to run binary");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert_eq!(stdout, "Hello, World! \n123 \ntrue \n");
+}

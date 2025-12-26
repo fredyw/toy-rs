@@ -3,7 +3,7 @@ use crate::ast::BinaryOp;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Value {
     Int(i64),
     Float(f64),
@@ -11,6 +11,22 @@ pub enum Value {
     Str(String),
     Unit,
     Function(Vec<String>, ast::Expr),
+    NativeFunc(fn(Vec<Value>) -> Value),
+}
+
+impl PartialEq for Value {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Value::Int(l), Value::Int(r)) => l == r,
+            (Value::Float(l), Value::Float(r)) => l == r,
+            (Value::Bool(l), Value::Bool(r)) => l == r,
+            (Value::Str(l), Value::Str(r)) => l == r,
+            (Value::Unit, Value::Unit) => true,
+            (Value::Function(lp, lb), Value::Function(rp, rb)) => lp == rp && lb == rb,
+            (Value::NativeFunc(l), Value::NativeFunc(r)) => *l as usize == *r as usize,
+            _ => false,
+        }
+    }
 }
 
 impl fmt::Display for Value {
@@ -24,6 +40,7 @@ impl fmt::Display for Value {
             Value::Function(params, _) => {
                 write!(f, "<fn ({})>", params.join(", "))
             }
+            Value::NativeFunc(_) => write!(f, "<native fn>"),
         }
     }
 }
@@ -35,9 +52,20 @@ pub struct Environment {
 
 impl Environment {
     pub fn new() -> Self {
-        Environment {
+        let mut env = Environment {
             values: HashMap::new(),
-        }
+        };
+        env.define(
+            "println".to_string(),
+            Value::NativeFunc(|args| {
+                for arg in args {
+                    print!("{} ", arg);
+                }
+                println!();
+                Value::Unit
+            }),
+        );
+        env
     }
 
     pub fn define(&mut self, name: String, value: Value) {
@@ -118,23 +146,27 @@ pub fn eval_expression(expr: ast::Expr, env: &mut Environment) -> Value {
                 Some(val) => val,
                 None => panic!("Undefined function: {}", name),
             };
+            let mut arg_values = Vec::new();
+            for arg_expr in args {
+                arg_values.push(eval_expression(arg_expr, env));
+            }
             match func_val {
                 Value::Function(params, body) => {
-                    if args.len() != params.len() {
+                    if arg_values.len() != params.len() {
                         panic!(
                             "Mismatched arguments: expected {}, got {}",
                             params.len(),
-                            args.len()
+                            arg_values.len()
                         );
                     }
                     // Clone the current environment to support recursion (dynamic scoping).
                     let mut func_env = env.clone();
-                    for (param, arg_expr) in params.iter().zip(args) {
-                        let arg_val = eval_expression(arg_expr, env);
+                    for (param, arg_val) in params.iter().zip(arg_values) {
                         func_env.define(param.clone(), arg_val);
                     }
                     eval_expression(body, &mut func_env)
                 }
+                Value::NativeFunc(func) => func(arg_values),
                 _ => panic!("Can only call functions, not {:?}", func_val),
             }
         }
@@ -302,5 +334,10 @@ mod tests {
     #[should_panic(expected = "Undefined variable: z")]
     fn test_undefined_variable() {
         eval_helper("let x = 10; x + z");
+    }
+
+    #[test]
+    fn test_println() {
+        assert_eq!(eval_helper(r#"println("hello")"#), Value::Unit);
     }
 }
