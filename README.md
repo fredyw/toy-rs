@@ -5,6 +5,14 @@
 
 A toy programming language with Rust-like syntax written in Rust.
 
+## Table of Contents
+
+- [Building](#building)
+- [Installing](#installing)
+- [Testing](#testing)
+- [Usage](#usage)
+- [Syntax](#syntax)
+
 ### Building
 
 To build the project, you need to have Rust installed. You can install it from [here](https://www.rust-lang.org/tools/install).
