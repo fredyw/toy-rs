@@ -26,6 +26,18 @@ let message = "Hello";
 let is_valid = true;
 ```
 
+#### Assignments
+
+Standard and compound assignment operators are supported.
+
+```rust
+let x = 10;
+x += 5; // 15
+x -= 2; // 13
+x *= 2; // 26
+x /= 2; // 13
+```
+
 #### Data Types
 
 - **Integers**: `1`, `42`, `-10`
@@ -65,6 +77,15 @@ let status = if x > 5 {
 } else {
     "Smaller"
 };
+```
+
+#### Comments
+
+Single-line comments starting with `//` are supported.
+
+```rust
+// This is a comment
+let x = 5; // Inline comment
 ```
 
 ### Building
