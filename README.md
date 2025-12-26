@@ -12,7 +12,16 @@ A toy programming language with Rust-like syntax for educational purposes writte
 - [Testing](#testing)
 - [Usage](#usage)
 - [Syntax](#syntax)
-- [Built-in Functions](#built-in-functions)
+    - [Variables](#variables)
+    - [Assignments](#assignments)
+    - [Data Types](#data-types)
+    - [Arithmetic Operations](#arithmetic-operations)
+    - [Logical Operations](#logical-operations)
+    - [Functions](#functions)
+    - [Control Flow](#control-flow)
+    - [Loops](#loops)
+    - [Comments](#comments)
+    - [Built-in Functions](#built-in-functions)
 
 ### Building
 
@@ -136,6 +145,15 @@ while i < 5 {
 }
 ```
 
+#### Comments
+
+Single-line comments starting with `//` are supported.
+
+```rust
+// This is a comment
+let x = 5; // Inline comment
+```
+
 #### Built-in Functions
 
 `toy-rs` includes built-in functions for output.
@@ -147,13 +165,4 @@ while i < 5 {
 print("The answer is", 42);
 println(); // Just a newline
 println("Done.");
-```
-
-#### Comments
-
-Single-line comments starting with `//` are supported.
-
-```rust
-// This is a comment
-let x = 5; // Inline comment
 ```
