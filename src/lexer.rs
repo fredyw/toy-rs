@@ -17,6 +17,10 @@ pub enum Token {
     Minus,
     Star,
     Slash,
+    PlusEq,
+    MinusEq,
+    StarEq,
+    SlashEq,
     Eq,
     EqEq,
     Lt,
@@ -55,10 +59,48 @@ impl<'a> Lexer<'a> {
     pub fn next_token(&mut self) -> Token {
         self.skip_whitespace();
         match self.input.next() {
-            Some('+') => Token::Plus,
-            Some('-') => Token::Minus,
-            Some('*') => Token::Star,
-            Some('/') => Token::Slash,
+            Some('+') => {
+                if let Some(&'=') = self.input.peek() {
+                    self.input.next();
+                    Token::PlusEq
+                } else {
+                    Token::Plus
+                }
+            }
+            Some('-') => {
+                if let Some(&'=') = self.input.peek() {
+                    self.input.next();
+                    Token::MinusEq
+                } else {
+                    Token::Minus
+                }
+            }
+            Some('*') => {
+                if let Some(&'=') = self.input.peek() {
+                    self.input.next();
+                    Token::StarEq
+                } else {
+                    Token::Star
+                }
+            }
+            Some('/') => {
+                if let Some(&'=') = self.input.peek() {
+                    self.input.next();
+                    Token::SlashEq
+                } else if let Some(&'/') = self.input.peek() {
+                    // Comment detected. Consume until newline.
+                    self.input.next(); // Eat the second `/`.
+                    while let Some(&ch) = self.input.peek() {
+                        if ch == '\n' {
+                            break;
+                        }
+                        self.input.next();
+                    }
+                    self.next_token()
+                } else {
+                    Token::Slash
+                }
+            }
             Some('(') => Token::LParen,
             Some(')') => Token::RParen,
             Some('{') => Token::LBrace,

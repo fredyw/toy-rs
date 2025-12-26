@@ -164,6 +164,14 @@ pub fn eval_statement(stmt: ast::Stmt, env: &mut Environment) -> Value {
             Value::Unit
         }
         ast::Stmt::ImplicitReturn(expr) => eval_expression(expr, env),
+        ast::Stmt::Assign(name, expr) => {
+            let value = eval_expression(expr, env);
+            if env.get(&name).is_none() {
+                panic!("Cannot assign to undefined variable '{}'", name);
+            }
+            env.define(name, value);
+            Value::Unit
+        }
     }
 }
 
@@ -254,5 +262,34 @@ mod tests {
     fn test_string_concatenation() {
         let input = r#""Hello " + "World""#;
         assert_eq!(eval_helper(input), Value::Str("Hello World".to_string()));
+    }
+
+    #[test]
+    fn test_compound_assignment() {
+        let input = "
+            let x = 10;
+            x += 5;
+            x -= 2;
+            x *= 2;
+            x /= 2;
+            x
+        ";
+        assert_eq!(eval_helper(input), Value::Int(13));
+
+        let input_float = "
+            let y = 10.0;
+            y += 5.0;
+            y /= 3.0;
+            y
+        ";
+        assert_eq!(eval_helper(input_float), Value::Float(5.0));
+
+        // Mixed
+        let input_mixed = "
+            let z = 10;
+            z += 2.5;
+            z
+        ";
+        assert_eq!(eval_helper(input_mixed), Value::Float(12.5));
     }
 }

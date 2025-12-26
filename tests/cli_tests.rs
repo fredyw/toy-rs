@@ -47,3 +47,15 @@ fn test_cli_control_flow() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert_eq!(stdout.trim(), "small medium large");
 }
+
+#[test]
+fn test_cli_assignment() {
+    let output = Command::new("cargo")
+        .args(&["run", "--quiet", "--", "tests/assignment.toy"])
+        .output()
+        .expect("Failed to run cargo");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert_eq!(stdout.trim(), "248.5");
+}

@@ -34,20 +34,9 @@ impl<'a> Parser<'a> {
                 Token::Let | Token::Fn => {
                     statements.push(self.parse_statement());
                 }
-                // Expressions, e.g., "1 + 1"
+                // Expressions (e.g., "1 + 1") or Assignments (e.g. "x += 1")
                 _ => {
-                    let expr = self.parse_expression(0);
-                    if self.current_token == Token::SemiColon {
-                        self.advance(); // Eat `;`.
-                        statements.push(Stmt::Expression(expr));
-                    } else {
-                        // If there is NO semicolon, it is only allowed if we are at EOF.
-                        if self.current_token == Token::Eof {
-                            statements.push(Stmt::ImplicitReturn(expr));
-                        } else {
-                            panic!("Expected ';' after expression");
-                        }
-                    }
+                    statements.push(self.parse_expression_statement());
                 }
             }
         }
@@ -106,6 +95,36 @@ impl<'a> Parser<'a> {
                 }
                 _ => {
                     let expr = self.parse_expression(0);
+
+                    if matches!(
+                        self.current_token,
+                        Token::PlusEq | Token::MinusEq | Token::StarEq | Token::SlashEq
+                    ) {
+                        let name = match expr {
+                            Expr::Variable(n) => n,
+                            _ => panic!(
+                                "Invalid assignment target. Only variables can be assigned to."
+                            ),
+                        };
+                        let op = match self.current_token {
+                            Token::PlusEq => BinaryOp::Add,
+                            Token::MinusEq => BinaryOp::Sub,
+                            Token::StarEq => BinaryOp::Mul,
+                            Token::SlashEq => BinaryOp::Div,
+                            _ => unreachable!(),
+                        };
+                        self.advance(); // Eat the operator (+=, etc).
+                        let right = self.parse_expression(0);
+                        self.expect(Token::SemiColon);
+                        let new_value_expr = Expr::Binary(
+                            Box::new(Expr::Variable(name.clone())),
+                            op,
+                            Box::new(right),
+                        );
+                        statements.push(Stmt::Assign(name, new_value_expr));
+                        continue;
+                    }
+
                     if self.current_token == Token::SemiColon {
                         // A statement. For example: "1 + 1;"
                         self.advance();
@@ -219,8 +238,37 @@ impl<'a> Parser<'a> {
 
     fn parse_expression_statement(&mut self) -> Stmt {
         let expr = self.parse_expression(0);
-        self.expect(Token::SemiColon);
-        Stmt::Expression(expr)
+        if matches!(
+            self.current_token,
+            Token::PlusEq | Token::MinusEq | Token::StarEq | Token::SlashEq
+        ) {
+            let name = match expr {
+                Expr::Variable(n) => n,
+                _ => panic!("Invalid assignment target. Only variables can be assigned to."),
+            };
+            let op = match self.current_token {
+                Token::PlusEq => BinaryOp::Add,
+                Token::MinusEq => BinaryOp::Sub,
+                Token::StarEq => BinaryOp::Mul,
+                Token::SlashEq => BinaryOp::Div,
+                _ => unreachable!(),
+            };
+            self.advance(); // Eat the operator (+=, etc).
+            let right = self.parse_expression(0);
+            self.expect(Token::SemiColon);
+            let new_value_expr =
+                Expr::Binary(Box::new(Expr::Variable(name.clone())), op, Box::new(right));
+            return Stmt::Assign(name, new_value_expr);
+        }
+
+        if self.current_token == Token::SemiColon {
+            self.advance();
+            Stmt::Expression(expr)
+        } else if self.current_token == Token::Eof {
+            Stmt::ImplicitReturn(expr)
+        } else {
+            panic!("Expected ';' after expression");
+        }
     }
 
     fn parse_function_statement(&mut self) -> Stmt {

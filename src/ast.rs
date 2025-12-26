@@ -40,4 +40,5 @@ pub enum Stmt {
     Fn(String, Vec<String>, Expr),
     Expression(Expr),
     ImplicitReturn(Expr),
+    Assign(String, Expr),
 }
