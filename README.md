@@ -55,6 +55,15 @@ let product = 2.5 * 4;
 let mixed = 10 + 2.5;
 ```
 
+#### Logical Operations
+
+Logical AND (`&&`) and OR (`||`) operators are supported. `&&` has higher precedence than `||`.
+
+```rust
+let valid = true && (false || true); // true
+let check = 1 < 2 && 3 > 2; // true
+```
+
 #### Functions
 Functions are declared using `fn`. The last expression in a block or a function body is implicitly returned.
 
