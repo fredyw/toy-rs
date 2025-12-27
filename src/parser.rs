@@ -101,6 +101,38 @@ impl<'a> Parser<'a> {
         Stmt::While(condition, body)
     }
 
+    fn try_parse_assignment(&mut self, expr: Expr) -> Result<Stmt, Expr> {
+        if matches!(
+            self.current_token,
+            Token::PlusEq | Token::MinusEq | Token::StarEq | Token::SlashEq | Token::Eq
+        ) {
+            let name = match expr {
+                Expr::Variable(n) => n,
+                _ => panic!("Invalid assignment target. Only variables can be assigned to."),
+            };
+            if self.current_token == Token::Eq {
+                self.advance();
+                let right = self.parse_expression(0);
+                self.expect(Token::SemiColon);
+                return Ok(Stmt::Assign(name, right));
+            }
+            let op = match self.current_token {
+                Token::PlusEq => BinaryOp::Add,
+                Token::MinusEq => BinaryOp::Sub,
+                Token::StarEq => BinaryOp::Mul,
+                Token::SlashEq => BinaryOp::Div,
+                _ => unreachable!(),
+            };
+            self.advance(); // Eat the operator (+=, etc).
+            let right = self.parse_expression(0);
+            self.expect(Token::SemiColon);
+            let new_value_expr =
+                Expr::Binary(Box::new(Expr::Variable(name.clone())), op, Box::new(right));
+            return Ok(Stmt::Assign(name, new_value_expr));
+        }
+        Err(expr)
+    }
+
     fn parse_block(&mut self) -> Expr {
         self.expect(Token::LBrace);
         let mut statements = Vec::new();
@@ -118,53 +150,24 @@ impl<'a> Parser<'a> {
                 }
                 _ => {
                     let expr = self.parse_expression(0);
-
-                    if matches!(
-                        self.current_token,
-                        Token::PlusEq | Token::MinusEq | Token::StarEq | Token::SlashEq | Token::Eq
-                    ) {
-                        let name = match expr {
-                            Expr::Variable(n) => n,
-                            _ => panic!(
-                                "Invalid assignment target. Only variables can be assigned to."
-                            ),
-                        };
-                        let op = match self.current_token {
-                            Token::PlusEq => BinaryOp::Add,
-                            Token::MinusEq => BinaryOp::Sub,
-                            Token::StarEq => BinaryOp::Mul,
-                            Token::SlashEq => BinaryOp::Div,
-                            Token::Eq => {
+                    match self.try_parse_assignment(expr) {
+                        Ok(stmt) => {
+                            statements.push(stmt);
+                            continue;
+                        }
+                        Err(expr) => {
+                            if self.current_token == Token::SemiColon {
+                                // A statement. For example: "1 + 1;"
                                 self.advance();
-                                let right = self.parse_expression(0);
-                                self.expect(Token::SemiColon);
-                                statements.push(Stmt::Assign(name, right));
-                                continue;
+                                statements.push(Stmt::Expression(expr));
+                            } else {
+                                // An expression. For example: "1 + 1"
+                                if self.current_token == Token::RBrace {
+                                    tail_expr = Some(Box::new(expr));
+                                } else {
+                                    panic!("Expected ';' or '}}' after expression");
+                                }
                             }
-                            _ => unreachable!(),
-                        };
-                        self.advance(); // Eat the operator (+=, etc).
-                        let right = self.parse_expression(0);
-                        self.expect(Token::SemiColon);
-                        let new_value_expr = Expr::Binary(
-                            Box::new(Expr::Variable(name.clone())),
-                            op,
-                            Box::new(right),
-                        );
-                        statements.push(Stmt::Assign(name, new_value_expr));
-                        continue;
-                    }
-
-                    if self.current_token == Token::SemiColon {
-                        // A statement. For example: "1 + 1;"
-                        self.advance();
-                        statements.push(Stmt::Expression(expr));
-                    } else {
-                        // An expression. For example: "1 + 1"
-                        if self.current_token == Token::RBrace {
-                            tail_expr = Some(Box::new(expr));
-                        } else {
-                            panic!("Expected ';' or '}}' after expression");
                         }
                     }
                 }
@@ -272,47 +275,22 @@ impl<'a> Parser<'a> {
 
     fn parse_expression_statement(&mut self) -> Stmt {
         let expr = self.parse_expression(0);
-        if matches!(
-            self.current_token,
-            Token::PlusEq | Token::MinusEq | Token::StarEq | Token::SlashEq | Token::Eq
-        ) {
-            let name = match expr {
-                Expr::Variable(n) => n,
-                _ => panic!("Invalid assignment target. Only variables can be assigned to."),
-            };
-            if self.current_token == Token::Eq {
-                self.advance();
-                let right = self.parse_expression(0);
-                self.expect(Token::SemiColon);
-                return Stmt::Assign(name, right);
+        match self.try_parse_assignment(expr) {
+            Ok(stmt) => stmt,
+            Err(expr) => {
+                // Allow omitting semicolon for block-like expressions (If, Block)
+                let is_block_like = matches!(expr, Expr::If(..) | Expr::Block(..));
+                if self.current_token == Token::SemiColon {
+                    self.advance();
+                    Stmt::Expression(expr)
+                } else if is_block_like {
+                    Stmt::Expression(expr)
+                } else if self.current_token == Token::Eof {
+                    Stmt::ImplicitReturn(expr)
+                } else {
+                    panic!("Expected ';' after expression");
+                }
             }
-            let op = match self.current_token {
-                Token::PlusEq => BinaryOp::Add,
-                Token::MinusEq => BinaryOp::Sub,
-                Token::StarEq => BinaryOp::Mul,
-                Token::SlashEq => BinaryOp::Div,
-                _ => unreachable!(),
-            };
-            self.advance(); // Eat the operator (+=, etc).
-            let right = self.parse_expression(0);
-            self.expect(Token::SemiColon);
-            let new_value_expr =
-                Expr::Binary(Box::new(Expr::Variable(name.clone())), op, Box::new(right));
-            return Stmt::Assign(name, new_value_expr);
-        }
-
-        // Allow omitting semicolon for block-like expressions (If, Block)
-        let is_block_like = matches!(expr, Expr::If(..) | Expr::Block(..));
-
-        if self.current_token == Token::SemiColon {
-            self.advance();
-            Stmt::Expression(expr)
-        } else if is_block_like {
-            Stmt::Expression(expr)
-        } else if self.current_token == Token::Eof {
-            Stmt::ImplicitReturn(expr)
-        } else {
-            panic!("Expected ';' after expression");
         }
     }
 
