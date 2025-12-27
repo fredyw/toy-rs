@@ -45,13 +45,12 @@ impl<'a> Parser<'a> {
                 Token::While => {
                     statements.push(self.parse_while_statement());
                 }
-                // Expressions (e.g., "1 + 1") or Assignments (e.g. "x += 1")
+                // Expressions (e.g., "1 + 1") or Assignments (e.g. "x += 1").
                 _ => {
                     statements.push(self.parse_expression_statement());
                 }
             }
         }
-
         statements
     }
 
@@ -201,7 +200,7 @@ impl<'a> Parser<'a> {
                 Expr::Literal(Literal::Bool(false))
             }
             Token::Identifier(name) => {
-                self.advance(); // Eat the name
+                self.advance(); // Eat the name.
                 if self.current_token == Token::LParen {
                     self.advance(); // Eat `(`.
                     let mut args = Vec::new();
@@ -235,12 +234,12 @@ impl<'a> Parser<'a> {
 
     fn get_precedence(&self) -> u8 {
         match self.current_token {
-            Token::Star | Token::Slash => 20,         // * and / happen first
-            Token::Plus | Token::Minus => 10,         // + and - happen after
-            Token::EqEq | Token::Lt | Token::Gt => 5, // Comparisons happen last
+            Token::Star | Token::Slash => 20,         // * and / happen first.
+            Token::Plus | Token::Minus => 10,         // + and - happen after.
+            Token::EqEq | Token::Lt | Token::Gt => 5, // Comparisons happen last.
             Token::And => 3,
             Token::Or => 1,
-            _ => 0, // Not an operator
+            _ => 0, // Not an operator.
         }
     }
 
@@ -278,7 +277,7 @@ impl<'a> Parser<'a> {
         match self.try_parse_assignment(expr) {
             Ok(stmt) => stmt,
             Err(expr) => {
-                // Allow omitting semicolon for block-like expressions (If, Block)
+                // Allow omitting semicolon for block-like expressions (If, Block).
                 let is_block_like = matches!(expr, Expr::If(..) | Expr::Block(..));
                 if self.current_token == Token::SemiColon {
                     self.advance();
